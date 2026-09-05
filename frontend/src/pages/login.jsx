@@ -63,15 +63,15 @@ function Login() {
     <main className="auth-page">
       <div className="auth-container">
         <div className="auth-brand">
-          <div className="auth-brand-mark">S</div>
-          <div className="auth-brand-name">SaaSify</div>
+          <div className="auth-brand-mark">V</div>
+          <div className="auth-brand-name">Velora</div>
         </div>
 
         <MagicRing>
           <div className="auth-card">
             <h1>Welcome back</h1>
             <p className="auth-subtitle">
-              Sign in to continue to your workspace.
+              Sign in to continue to a clearer workspace.
             </p>
 
             {error && <div className="auth-error">{error}</div>}
@@ -82,7 +82,7 @@ function Login() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder=""
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   required

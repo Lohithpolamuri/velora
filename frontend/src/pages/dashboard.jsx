@@ -8,8 +8,8 @@ import {
   SettingsSection,
 } from "./dashboardsections";
 
-const DATA_EVENT = "saasify:data-changed";
-const ACTIVITY_EVENT = "saasify:activity-changed";
+const DATA_EVENT = "Velora:data-changed";
+const ACTIVITY_EVENT = "Velora:activity-changed";
 
 const getActivities = () => {
   try {
@@ -417,10 +417,10 @@ function Dashboard() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-logo">
-            S
+            V
           </div>
 
-          <span>SaaSify</span>
+          <span>Velora</span>
         </div>
 
         <div className="sidebar-section">

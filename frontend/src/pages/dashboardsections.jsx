@@ -1253,6 +1253,39 @@ export function SettingsSection({
   const [error, setError] =
     useState("");
 
+  const [currentPassword, setCurrentPassword] =
+    useState("");
+
+  const [newPassword, setNewPassword] =
+    useState("");
+
+  const [confirmNewPassword, setConfirmNewPassword] =
+    useState("");
+
+  const [passwordSaving, setPasswordSaving] =
+    useState(false);
+
+  const [passwordSaved, setPasswordSaved] =
+    useState(false);
+
+  const [passwordError, setPasswordError] =
+    useState("");
+
+  const hasMinLength = newPassword.length >= 8;
+
+  const hasSpecialChar =
+    /[!@#$%^&*(),.?":{}|<>_\-+=[\]/\\;'`~]/.test(newPassword);
+
+  const passwordsMatch =
+    newPassword.length > 0 &&
+    newPassword === confirmNewPassword;
+
+  const canSubmitPassword =
+    currentPassword.length > 0 &&
+    hasMinLength &&
+    hasSpecialChar &&
+    passwordsMatch;
+
   useEffect(() => {
     setName(user?.name || "");
     setEmail(user?.email || "");
@@ -1425,6 +1458,87 @@ export function SettingsSection({
     }
   };
 
+  const handleChangePassword = async () => {
+    setPasswordSaving(true);
+    setPasswordSaved(false);
+    setPasswordError("");
+
+    if (!canSubmitPassword) {
+      setPasswordError(
+        "Check the password requirements below and make sure both new password fields match."
+      );
+      setPasswordSaving(false);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setPasswordError(
+        "Your session has expired. Please log in again."
+      );
+      setPasswordSaving(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/auth/me/password",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+          }),
+        }
+      );
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data.detail === "string"
+            ? data.detail
+            : "Unable to update your password"
+        );
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+
+      addActivity(
+        "Changed password",
+        "Updated account password"
+      );
+
+      emitDataChange();
+
+      setPasswordSaved(true);
+
+      setTimeout(() => {
+        setPasswordSaved(false);
+      }, 2500);
+    } catch (err) {
+      setPasswordError(
+        err.message ||
+          "Something went wrong. Please try again."
+      );
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
   return (
     <div className="section-panel settings-panel">
       <div className="section-heading">
@@ -1486,6 +1600,130 @@ export function SettingsSection({
               placeholder="Enter your email"
             />
           </label>
+        </div>
+      </div>
+
+      <div className="settings-group">
+        <div className="settings-group-heading">
+          <h3>Security</h3>
+          <p>Change your account password.</p>
+        </div>
+
+        {passwordSaved && (
+          <div className="success-message">
+            Your password has been updated
+            successfully.
+          </div>
+        )}
+
+        {passwordError && (
+          <div className="auth-error">
+            {passwordError}
+          </div>
+        )}
+
+        <div className="settings-form">
+          <label>
+            Current Password
+
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(event) =>
+                setCurrentPassword(
+                  event.target.value
+                )
+              }
+              placeholder="Enter current password"
+            />
+          </label>
+
+          <div></div>
+
+          <label>
+            New Password
+
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(event) =>
+                setNewPassword(
+                  event.target.value
+                )
+              }
+              placeholder="Enter new password"
+            />
+          </label>
+
+          <label>
+            Confirm New Password
+
+            <input
+              type="password"
+              value={confirmNewPassword}
+              onChange={(event) =>
+                setConfirmNewPassword(
+                  event.target.value
+                )
+              }
+              placeholder="Re-enter new password"
+            />
+          </label>
+        </div>
+
+        <ul className="password-requirements">
+          <li
+            className={
+              hasMinLength
+                ? "requirement-met"
+                : "requirement-unmet"
+            }
+          >
+            <span aria-hidden="true">
+              {hasMinLength ? "✓" : "✕"}
+            </span>
+            At least 8 characters
+          </li>
+
+          <li
+            className={
+              hasSpecialChar
+                ? "requirement-met"
+                : "requirement-unmet"
+            }
+          >
+            <span aria-hidden="true">
+              {hasSpecialChar ? "✓" : "✕"}
+            </span>
+            At least one special character (e.g. ! @ # $ % & *)
+          </li>
+
+          <li
+            className={
+              passwordsMatch
+                ? "requirement-met"
+                : "requirement-unmet"
+            }
+          >
+            <span aria-hidden="true">
+              {passwordsMatch ? "✓" : "✕"}
+            </span>
+            New password fields match
+          </li>
+        </ul>
+
+        <div className="settings-footer">
+          <button
+            className="save-settings-button"
+            onClick={handleChangePassword}
+            disabled={
+              passwordSaving || !canSubmitPassword
+            }
+          >
+            {passwordSaving
+              ? "Updating..."
+              : "Update password"}
+          </button>
         </div>
       </div>
 

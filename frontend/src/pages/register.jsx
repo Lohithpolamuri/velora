@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MagicRing from "../components/MagicRing";
 import "./auth.css";
+
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]/\\;'`~]/;
 
 function Register() {
   const navigate = useNavigate();
@@ -11,9 +13,28 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const hasMinLength = password.length >= 8;
+  const hasSpecialChar = SPECIAL_CHAR_REGEX.test(password);
+  const isPasswordValid = hasMinLength && hasSpecialChar;
+
+  const isEmailValid = useMemo(
+    () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
+    [email]
+  );
+
+  const canSubmit =
+    name.trim().length > 0 && isEmailValid && isPasswordValid;
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+
+    if (!isPasswordValid) {
+      setError(
+        "Password must be at least 8 characters long and include at least one special character."
+      );
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:8000/auth/register", {
@@ -48,64 +69,96 @@ function Register() {
     <main className="auth-page">
       <div className="auth-container">
         <div className="auth-brand">
-          <div className="auth-brand-mark">S</div>
-          <div className="auth-brand-name">SaaSify</div>
+          <div className="auth-brand-mark">V</div>
+          <div className="auth-brand-name">Velora</div>
         </div>
 
         <MagicRing>
           <div className="auth-card">
-            <h1>Create account</h1>
-            <p className="auth-subtitle">
-              Start managing your workspace today.
-            </p>
+          <h1>Create account</h1>
+          <p className="auth-subtitle">
+            Start managing your workspace today.
+          </p>
 
-            {error && <div className="auth-error">{error}</div>}
+          {error && <div className="auth-error">{error}</div>}
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <div className="auth-field">
-                <label htmlFor="name">Full name</label>
-                <input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="auth-field">
-                <label htmlFor="email">Email address</label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="auth-field">
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-              </div>
-
-              <button className="auth-button" type="submit">
-                Create account
-              </button>
-            </form>
-
-            <div className="auth-footer">
-              Already have an account? <Link to="/login">Sign in</Link>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <label htmlFor="name">Full name</label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
             </div>
+
+            <div className="auth-field">
+              <label htmlFor="email">Email address</label>
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Create a password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+
+              <ul className="password-requirements">
+                <li
+                  className={
+                    hasMinLength
+                      ? "requirement-met"
+                      : "requirement-unmet"
+                  }
+                >
+                  <span aria-hidden="true">
+                    {hasMinLength ? "✓" : "✕"}
+                  </span>
+                  At least 8 characters
+                </li>
+
+                <li
+                  className={
+                    hasSpecialChar
+                      ? "requirement-met"
+                      : "requirement-unmet"
+                  }
+                >
+                  <span aria-hidden="true">
+                    {hasSpecialChar ? "✓" : "✕"}
+                  </span>
+                  At least one special character (e.g. ! @ # $ % & *)
+                </li>
+              </ul>
+            </div>
+
+            <button
+              className="auth-button"
+              type="submit"
+              disabled={!canSubmit}
+            >
+              Create account
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </div>
           </div>
         </MagicRing>
 
