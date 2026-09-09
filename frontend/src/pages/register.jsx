@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MagicRing from "../components/MagicRing";
+import vertofiLogo from "../assets/vertofi.jpg";
 import "./auth.css";
 
 const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-+=[\]/\\;'`~]/;
@@ -69,9 +70,9 @@ function Register() {
     <main className="auth-page">
       <div className="auth-container">
         <div className="auth-brand">
-          <div className="auth-brand-mark">V</div>
-          <div className="auth-brand-name">Velora</div>
-        </div>
+    <img src={vertofiLogo} alt="Vertofi" className="auth-logo" />
+    <div className="auth-brand-name">Vertofi</div>
+</div>
 
         <MagicRing>
           <div className="auth-card">

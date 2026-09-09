@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import vertofiLogo from "../assets/vertofi.jpg";
 import {
   ActivitySection,
   NotificationsSection,
@@ -8,8 +9,8 @@ import {
   SettingsSection,
 } from "./dashboardsections";
 
-const DATA_EVENT = "Velora:data-changed";
-const ACTIVITY_EVENT = "Velora:activity-changed";
+const DATA_EVENT = "Vertofi:data-changed";
+const ACTIVITY_EVENT = "Vertofi:activity-changed";
 
 const getActivities = () => {
   try {
@@ -416,12 +417,9 @@ function Dashboard() {
     <div className="dashboard-layout">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-logo">
-            V
-          </div>
-
-          <span>Velora</span>
-        </div>
+    <img src={vertofiLogo} alt="Vertofi" className="brand-logo" />
+    <span>Vertofi</span>
+</div>
 
         <div className="sidebar-section">
           <p className="sidebar-label">

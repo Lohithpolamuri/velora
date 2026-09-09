@@ -327,3 +327,16 @@
     inset: -20px;
   }
 }
+.auth-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

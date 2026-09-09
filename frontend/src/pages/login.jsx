@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import MagicRing from "../components/MagicRing";
+import vertofiLogo from "../assets/vertofi.jpg";
 import "./auth.css";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 function Login() {
   const navigate = useNavigate();
@@ -11,17 +13,20 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/auth/login", {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           email,
           password,
@@ -38,12 +43,8 @@ function Login() {
         );
       }
 
-      localStorage.setItem("token", data.access_token);
-
-      const meResponse = await fetch("http://localhost:8000/auth/me", {
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
+      const meResponse = await fetch(`${API_URL}/auth/me`, {
+        credentials: "include",
       });
 
       const userData = await meResponse.json();
@@ -56,6 +57,8 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,54 +66,59 @@ function Login() {
     <main className="auth-page">
       <div className="auth-container">
         <div className="auth-brand">
-          <div className="auth-brand-mark">V</div>
-          <div className="auth-brand-name">Velora</div>
-        </div>
+    <img src={vertofiLogo} alt="Vertofi" className="auth-logo" />
+    <div className="auth-brand-name">Vertofi</div>
+</div>
 
-        <MagicRing>
-          <div className="auth-card">
-            <h1>Welcome back</h1>
-            <p className="auth-subtitle">
-              Sign in to continue to a clearer workspace.
-            </p>
+        <div className="auth-card">
+          <h1>Welcome back</h1>
 
-            {error && <div className="auth-error">{error}</div>}
+          <p className="auth-subtitle">
+            Sign in to continue to your workspace.
+          </p>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <div className="auth-field">
-                <label htmlFor="email">Email address</label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder=""
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </div>
+          {error && <div className="auth-error">{error}</div>}
 
-              <div className="auth-field">
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-              </div>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <label htmlFor="email">Email address</label>
 
-              <button className="auth-button" type="submit">
-                Sign in
-              </button>
-            </form>
-
-            <div className="auth-footer">
-              Don't have an account? <Link to="/register">Create account</Link>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
             </div>
+
+            <div className="auth-field">
+              <label htmlFor="password">Password</label>
+
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              className="auth-button"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            Don't have an account?{" "}
+            <Link to="/register">Create account</Link>
           </div>
-        </MagicRing>
+        </div>
 
         <div className="auth-security">
           Your account is securely protected.
