@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { apiFetch } from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -10,17 +9,8 @@ export function AuthProvider({ children }) {
 
   const loadUser = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        setUser(null);
-        return;
-      }
-
-      const userData = await response.json();
-      setUser(userData);
+      const data = await apiFetch("/auth/me");
+      setUser(data);
     } catch {
       setUser(null);
     } finally {
@@ -32,35 +22,17 @@ export function AuthProvider({ children }) {
     loadUser();
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-  };
+  const login = (userData) => setUser(userData);
 
   const logout = async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await apiFetch("/auth/logout", { method: "POST" });
     } finally {
       setUser(null);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        login,
-        logout,
-        isAuthenticated: !!user,
-        loading,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, setUser, login, logout, isAuthenticated: !!user, loading }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -15,15 +15,9 @@ class UserCreate(BaseModel):
     @classmethod
     def validate_password(cls, value: str) -> str:
         if len(value) < 8:
-            raise ValueError(
-                "Password must be at least 8 characters long."
-            )
-
+            raise ValueError("Password must be at least 8 characters long.")
         if not SPECIAL_CHAR_PATTERN.search(value):
-            raise ValueError(
-                "Password must include at least one special character."
-            )
-
+            raise ValueError("Password must include at least one special character.")
         return value
 
 
@@ -41,15 +35,11 @@ class UserOut(BaseModel):
     id: int
     name: str
     email: EmailStr
+    is_verified: bool
     created_at: datetime
 
     class Config:
         from_attributes = True
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
 
 
 class PasswordChange(BaseModel):
@@ -60,13 +50,11 @@ class PasswordChange(BaseModel):
     @classmethod
     def validate_new_password(cls, value: str) -> str:
         if len(value) < 8:
-            raise ValueError(
-                "New password must be at least 8 characters long."
-            )
-
+            raise ValueError("New password must be at least 8 characters long.")
         if not SPECIAL_CHAR_PATTERN.search(value):
-            raise ValueError(
-                "New password must include at least one special character."
-            )
-
+            raise ValueError("New password must include at least one special character.")
         return value
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
