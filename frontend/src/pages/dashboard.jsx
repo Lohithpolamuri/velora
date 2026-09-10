@@ -1,39 +1,58 @@
 import { useEffect, useState } from "react";
+import vertofiLogo from "../assets/vertofi.jpg";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
-import vertofiLogo from "../assets/vertofi.jpg";
-import { ActivitySection, NotificationsSection, WorkspaceSection, SubscriptionSection, SettingsSection, OverviewSection, ProjectsSection } from "./dashboardsections";
 import "./dashboard.css";
+import {
+  ActivitySection,
+  NotificationsSection,
+  OverviewSection,
+  ProjectsSection,
+  SettingsSection,
+  SubscriptionSection,
+  WorkspaceSection,
+} from "./dashboardsections";
 
-const navigation = [
-  ["Overview", "▦"], ["Projects", "□"], ["Activity", "↗"], ["Notifications", "♢"], ["Workspace", "□"], ["Subscription", "◇"], ["Settings", "⚙"],
+const NAV_ITEMS = [
+  ["Overview", "▦"],
+  ["Projects", "□"],
+  ["Activity", "↗"],
+  ["Notifications", "♢"],
+  ["Workspace", "□"],
+  ["Subscription", "◇"],
+  ["Settings", "⚙"],
 ];
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const [activeSection, setActiveSection] = useState("Overview");
+  const [activeTab, setActiveTab] = useState("Overview");
   const [summary, setSummary] = useState(null);
   const [preferences, setPreferences] = useState(null);
-  const [toast, setToast] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
 
-  const refresh = async () => {
+  const refreshAll = async () => {
     try {
-      const [dashboard, prefs] = await Promise.all([apiFetch("/api/dashboard"), apiFetch("/api/preferences")]);
-      setSummary(dashboard);
+      const [sum, prefs] = await Promise.all([
+        apiFetch("/api/dashboard"),
+        apiFetch("/api/preferences"),
+      ]);
+      setSummary(sum);
       setPreferences(prefs);
       applyPreferences(prefs);
-    } catch (error) {
-      if (error.status === 401) window.location.href = "/login";
+    } catch (err) {
+      if (err.status === 401) {
+        window.location.href = "/login";
+      }
     }
   };
 
   useEffect(() => {
-    refresh();
-    const timer = setInterval(() => {
+    refreshAll();
+    const interval = setInterval(() => {
       apiFetch("/api/heartbeat", { method: "POST" }).catch(() => {});
-      refresh();
+      refreshAll();
     }, 30000);
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, []);
 
   const applyPreferences = (prefs) => {
@@ -51,23 +70,35 @@ function Dashboard() {
     window.location.href = "/login";
   };
 
-  const onChanged = async (message) => {
-    if (message) {
-      setToast(message);
-      setTimeout(() => setToast(""), 3000);
+  const handleDataChanged = async (msg) => {
+    if (msg) {
+      setToastMessage(msg);
+      setTimeout(() => setToastMessage(""), 3000);
     }
-    await refresh();
+    await refreshAll();
   };
 
-  const content = {
-    Overview: <OverviewSection user={user} summary={summary} onNavigate={setActiveSection} />,
-    Projects: <ProjectsSection onChanged={onChanged} />,
+  const tabComponents = {
+    Overview: <OverviewSection user={user} summary={summary} onNavigate={setActiveTab} />,
+    Projects: <ProjectsSection onChanged={handleDataChanged} />,
     Activity: <ActivitySection />,
-    Notifications: <NotificationsSection onChanged={onChanged} />,
-    Workspace: <WorkspaceSection user={user} onChanged={onChanged} />,
-    Subscription: <SubscriptionSection onChanged={onChanged} />,
-    Settings: <SettingsSection user={user} preferences={preferences} onSaved={(prefs) => { setPreferences(prefs); applyPreferences(prefs); onChanged("Preferences saved"); }} />,
-  }[activeSection];
+    Notifications: <NotificationsSection onChanged={handleDataChanged} />,
+    Workspace: <WorkspaceSection user={user} onChanged={handleDataChanged} />,
+    Subscription: <SubscriptionSection onChanged={handleDataChanged} />,
+    Settings: (
+      <SettingsSection
+        user={user}
+        preferences={preferences}
+        onSaved={(newPrefs) => {
+          setPreferences(newPrefs);
+          applyPreferences(newPrefs);
+          handleDataChanged("Preferences saved");
+        }}
+      />
+    ),
+  };
+
+  const content = tabComponents[activeTab];
 
   return (
     <div className="dashboard-layout">
@@ -76,26 +107,56 @@ function Dashboard() {
           <img src={vertofiLogo} alt="Vertofi" className="brand-logo-image" />
           <span>Vertofi</span>
         </div>
+
         <nav className="nav-bar">
-          {navigation.map(([name, icon]) => (
-            <button key={name} className={`nav-item ${activeSection === name ? "active" : ""}`} onClick={() => setActiveSection(name)} title={name}>
-              <span className="nav-icon">{icon}</span><span>{name}</span><span className="nav-popover">Open {name}</span>
+          {NAV_ITEMS.map(([name, icon]) => (
+            <button
+              key={name}
+              className={`nav-item ${activeTab === name ? "active" : ""}`}
+              onClick={() => setActiveTab(name)}
+              title={name}
+            >
+              <span className="nav-icon">{icon}</span>
+              <span>{name}</span>
+              <span className="nav-popover">Open {name}</span>
             </button>
           ))}
         </nav>
+
         <div className="sidebar-actions">
-          <div className="help-chip"><span>?</span><div><strong>Need help?</strong><small>Contact support</small></div></div>
-          <button className="logout-button" onClick={handleLogout}>↪ Logout</button>
+          <div className="help-chip">
+            <span>?</span>
+            <div>
+              <strong>Need help?</strong>
+              <small>Contact support</small>
+            </div>
+          </div>
+          <button className="logout-button" onClick={handleLogout}>
+            ↪ Logout
+          </button>
         </div>
       </header>
+
       <main className="dashboard-main">
         <div className="topbar">
-          <div><div className="breadcrumb">Dashboard / {activeSection}</div><h1>{activeSection}</h1></div>
-          <div className="profile"><div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || "V"}</div><div><strong>{user?.name}</strong><small>{user?.email}</small></div></div>
+          <div>
+            <div className="breadcrumb">Dashboard / {activeTab}</div>
+            <h1>{activeTab}</h1>
+          </div>
+
+          <div className="profile">
+            <div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || "V"}</div>
+            <div>
+              <strong>{user?.name}</strong>
+              <small>{user?.email}</small>
+            </div>
+          </div>
         </div>
+
         <section className="dashboard-content">{content}</section>
       </main>
-      {toast && <div className="toast">{toast}</div>}
+
+      {toastMessage && <div className="toast">{toastMessage}</div>}
     </div>
   );
 }
