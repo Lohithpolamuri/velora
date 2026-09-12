@@ -20,6 +20,8 @@ def _send(subject: str, recipient: str, html: str, text: str) -> None:
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
         server.send_message(message)
 
+        print(f"DEBUG SMTP_USER={settings.SMTP_USER!r} SMTP_PASSWORD_LEN={len(settings.SMTP_PASSWORD or '')}")
+
 
 def send_verification_email(email: str, name: str, token: str) -> None:
     link = f"{settings.FRONTEND_URL.rstrip('/')}/verify-email?token={token}"

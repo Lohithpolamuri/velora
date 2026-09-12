@@ -5,6 +5,8 @@ Copy backend/.env.example to backend/.env for local development and
 adjust as needed. Never commit a real .env file with production
 secrets in it.
 """
+from dotenv import load_dotenv
+load_dotenv(override=True)
 import os
 
 

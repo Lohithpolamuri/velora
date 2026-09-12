@@ -14,17 +14,17 @@ import {
 } from "./dashboardsections";
 
 const NAV_ITEMS = [
-  ["Overview", "▦"],
-  ["Projects", "□"],
-  ["Activity", "↗"],
-  ["Notifications", "♢"],
-  ["Workspace", "□"],
-  ["Subscription", "◇"],
-  ["Settings", "⚙"],
+  ["Overview", "✦"],
+  ["Projects", "📁"],
+  ["Workspace", "👥"],
+  ["Subscription", "💳"],
+  ["Activity", "📜"],
+  ["Notifications", "🔔"],
+  ["Settings", "⚙️"],
 ];
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("Overview");
   const [summary, setSummary] = useState(null);
   const [preferences, setPreferences] = useState(null);
@@ -36,6 +36,7 @@ function Dashboard() {
         apiFetch("/api/dashboard"),
         apiFetch("/api/preferences"),
       ]);
+
       setSummary(sum);
       setPreferences(prefs);
       applyPreferences(prefs);
@@ -48,16 +49,20 @@ function Dashboard() {
 
   useEffect(() => {
     refreshAll();
+
     const interval = setInterval(() => {
       apiFetch("/api/heartbeat", { method: "POST" }).catch(() => {});
       refreshAll();
     }, 30000);
+
     return () => clearInterval(interval);
   }, []);
 
   const applyPreferences = (prefs) => {
     if (!prefs) return;
+
     const root = document.documentElement;
+
     root.dataset.theme = prefs.theme;
     root.dataset.accent = prefs.accent;
     root.dataset.font = prefs.font;
@@ -65,46 +70,96 @@ function Dashboard() {
     root.dataset.sidebar = prefs.sidebar;
   };
 
+  const showToast = (message) => {
+    if (!message) return;
+
+    setToastMessage(message);
+
+    setTimeout(() => {
+      setToastMessage("");
+    }, 3000);
+  };
+
   const handleLogout = async () => {
     await logout();
     window.location.href = "/login";
   };
 
-  const handleDataChanged = async (msg) => {
-    if (msg) {
-      setToastMessage(msg);
-      setTimeout(() => setToastMessage(""), 3000);
-    }
+  const handleDataChanged = async (message) => {
+    showToast(message);
     await refreshAll();
   };
 
+  const handleProfileSaved = (updatedUser) => {
+    if (updatedUser) {
+      setUser(updatedUser);
+      showToast("Profile updated successfully");
+    }
+  };
+
   const tabComponents = {
-    Overview: <OverviewSection user={user} summary={summary} onNavigate={setActiveTab} />,
-    Projects: <ProjectsSection onChanged={handleDataChanged} />,
+    Overview: (
+      <OverviewSection
+        user={user}
+        summary={summary}
+        onNavigate={setActiveTab}
+      />
+    ),
+
+    Projects: (
+      <ProjectsSection
+        onChanged={handleDataChanged}
+      />
+    ),
+
     Activity: <ActivitySection />,
-    Notifications: <NotificationsSection onChanged={handleDataChanged} />,
-    Workspace: <WorkspaceSection user={user} onChanged={handleDataChanged} />,
-    Subscription: <SubscriptionSection onChanged={handleDataChanged} />,
+
+    Notifications: (
+      <NotificationsSection
+        onChanged={handleDataChanged}
+      />
+    ),
+
+    Workspace: (
+      <WorkspaceSection
+        user={user}
+        onChanged={handleDataChanged}
+      />
+    ),
+
+    Subscription: (
+      <SubscriptionSection
+        onChanged={handleDataChanged}
+      />
+    ),
+
     Settings: (
       <SettingsSection
         user={user}
         preferences={preferences}
-        onSaved={(newPrefs) => {
-          setPreferences(newPrefs);
-          applyPreferences(newPrefs);
+        onSaved={(value) => {
+          if (value?.id) {
+            handleProfileSaved(value);
+            return;
+          }
+
+          setPreferences(value);
+          applyPreferences(value);
           handleDataChanged("Preferences saved");
         }}
       />
     ),
   };
 
-  const content = tabComponents[activeTab];
-
   return (
     <div className="dashboard-layout">
       <header className="sidebar">
         <div className="brand">
-          <img src={vertofiLogo} alt="Vertofi" className="brand-logo-image" />
+          <img
+            src={vertofiLogo}
+            alt="Vertofi"
+            className="brand-logo-image"
+          />
           <span>Vertofi</span>
         </div>
 
@@ -112,13 +167,17 @@ function Dashboard() {
           {NAV_ITEMS.map(([name, icon]) => (
             <button
               key={name}
-              className={`nav-item ${activeTab === name ? "active" : ""}`}
+              className={`nav-item ${
+                activeTab === name ? "active" : ""
+              }`}
               onClick={() => setActiveTab(name)}
               title={name}
             >
               <span className="nav-icon">{icon}</span>
               <span>{name}</span>
-              <span className="nav-popover">Open {name}</span>
+              <span className="nav-popover">
+                Open {name}
+              </span>
             </button>
           ))}
         </nav>
@@ -131,7 +190,11 @@ function Dashboard() {
               <small>Contact support</small>
             </div>
           </div>
-          <button className="logout-button" onClick={handleLogout}>
+
+          <button
+            className="logout-button"
+            onClick={handleLogout}
+          >
             ↪ Logout
           </button>
         </div>
@@ -140,12 +203,18 @@ function Dashboard() {
       <main className="dashboard-main">
         <div className="topbar">
           <div>
-            <div className="breadcrumb">Dashboard / {activeTab}</div>
+            <div className="breadcrumb">
+              Dashboard / {activeTab}
+            </div>
+
             <h1>{activeTab}</h1>
           </div>
 
           <div className="profile">
-            <div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || "V"}</div>
+            <div className="avatar">
+              {user?.name?.charAt(0)?.toUpperCase() || "V"}
+            </div>
+
             <div>
               <strong>{user?.name}</strong>
               <small>{user?.email}</small>
@@ -153,10 +222,16 @@ function Dashboard() {
           </div>
         </div>
 
-        <section className="dashboard-content">{content}</section>
+        <section className="dashboard-content">
+          {tabComponents[activeTab]}
+        </section>
       </main>
 
-      {toastMessage && <div className="toast">{toastMessage}</div>}
+      {toastMessage && (
+        <div className="toast">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

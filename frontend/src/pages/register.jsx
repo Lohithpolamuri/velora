@@ -18,6 +18,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const hasMinLength = password.length >= 8;
   const hasSpecialChar = SPECIAL_CHAR_REGEX.test(password);
@@ -28,16 +29,22 @@ function Register() {
     [email]
   );
 
-  const canSubmit = name.trim().length > 0 && isEmailValid && isPasswordValid;
+  const canSubmit = name.trim().length > 0 && isEmailValid && isPasswordValid && !submitting;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
+    if (submitting) {
+      return;
+    }
+
     if (!isPasswordValid) {
       setError("Password must be at least 8 characters long and include at least one special character.");
       return;
     }
+
+    setSubmitting(true);
 
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
@@ -55,6 +62,8 @@ function Register() {
       setRegistered(true);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -145,7 +154,7 @@ function Register() {
             </div>
 
             <button className="auth-button" type="submit" disabled={!canSubmit}>
-              Create account
+              {submitting ? "Creating account..." : "Create account"}
             </button>
           </form>
 
